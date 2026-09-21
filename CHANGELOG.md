@@ -12,6 +12,11 @@
 - Added a 300 ms settling pause after the DXC2's 40 mm local unload retract.
 - Documented the `cfs empty print` tail-obstruction sequence and the separate
   closed-loop extruder-controller (`0x85`) startup-handshake fault.
+- Recorded the known-good dummy-motor isolation test: both motor assemblies
+  were silent on the same cable, narrowing the `0x85` fault to the short motor
+  cable, toolboard, or upstream toolhead harness.
+- Documented the Beacon bridge boot race where USB is present but the running
+  bridge fails to create `/dev/cartographer`.
 - Verified the forced-actuation/retraction recovery path without
   `RETRUDE_ERR6`, `key865`, tangle, pause, or sensor-cleanup faults.
 - Documented the captured failure timeline, safe homing recovery, and delayed
