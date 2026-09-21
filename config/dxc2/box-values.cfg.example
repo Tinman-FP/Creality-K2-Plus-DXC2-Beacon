@@ -1,0 +1,18 @@
+# Merge these keys into the EXISTING [box] section in box.cfg.
+# Do not include this file directly: a second [box] section is invalid.
+#
+# Manufacturer baseline for the DXC2 is Tn_retrude: -20.  The reference
+# machine was subsequently tuned to -18, which gave a smoother transition.
+Tn_retrude: -18
+
+# Reference-machine CFS handoff value.  Tune in 1-2 mm increments for your
+# PTFE path.  On firmware 1.1.6.1, lowering this value feeds farther.
+buffer_empty_len: 25.5
+
+# Extended cutter actuator acceptance window.  The repeatable trigger point
+# on the reference machine was approximately X=-5.3.
+check_cut_pos_x_min: -9.5
+check_cut_pos_x_max: -5.0
+
+# Do not copy Tn_extrude_temp from another machine.  Set it for the material
+# being loaded; the reference machine's 260 C value is intentionally omitted.

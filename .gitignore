@@ -1,0 +1,9 @@
+.DS_Store
+*.bak
+*.log
+*.pyc
+__pycache__/
+printer.cfg
+box.cfg
+gcode_macro.cfg
+sensorless.cfg

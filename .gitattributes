@@ -1,0 +1,7 @@
+# Preserve tested vendor/runtime files byte-for-byte; their SHA-256 values are
+# part of the compatibility gate even where the upstream file has whitespace.
+config/KAMP/Adaptive_Meshing.cfg -whitespace
+config/KAMP_Settings.cfg -whitespace
+config/beacon_guard.cfg -whitespace
+reference/sensorless.cfg.tested -whitespace
+runtime/firmware-1.1.6.1/homing.py -whitespace
