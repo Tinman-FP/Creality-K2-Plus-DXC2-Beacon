@@ -31,7 +31,12 @@ check_cut_pos_x_min: -9.5
 
 `Tn_retrude: -18` is an important final correction made after the main test session. It loaded more smoothly than `-20` on this machine. Treat it as a tested result, not a universal requirement.
 
-The cutter's repeatable contact was approximately X=-5.3 with the extended actuator. The stock maximum of -5.5 rejected that otherwise repeatable result, so the maximum was changed to -5.0. Always watch the cutter calibration and use the smallest window change that contains the repeatable physical trigger point.
+With `cut_pos_offset: 0.6`, the extended actuator made repeatable calibration
+contact at X=-6.00 and saved `cut_pos_x: -5.40`. The earlier `0.4` offset had
+saved `cut_pos_x: -5.30`, so the final setting added 0.10 mm of physical cutter
+travel. The stock maximum of -5.5 rejected the earlier otherwise-repeatable
+result, so the maximum remains -5.0. Always watch cutter calibration and use
+the smallest window change that contains the repeatable physical trigger.
 
 ## How CFS engagement fails with DXC2
 
@@ -103,10 +108,14 @@ Those commands completed CFS bookkeeping but did not consistently execute the pr
 
 The supplied `DXC2_END_UNLOAD` macro:
 
-1. checks that the CFS is enabled and filament is detected;
-2. calls `BOX_QUIT_MATERIAL`;
-3. waits for motion completion; and
-4. then calls `BOX_END` and `BOX_END_PRINT`.
+1. preserves CFS ownership even if the late toolhead switch clears;
+2. uses the normal `BOX_QUIT_MATERIAL` path when filament is detected;
+3. directly forces the cutter move before retracting when the CFS path is
+   active but the toolhead switch is already clear;
+4. waits for movement and freshly evaluates filament/error state;
+5. permits no more than two attempts;
+6. delays `BOX_END` and `BOX_END_PRINT` until verification succeeds; and
+7. restores the filament sensor on complete, cancel, and error paths.
 
 See [`config/macros/dxc2_end_unload.cfg`](../config/macros/dxc2_end_unload.cfg).
 
@@ -139,10 +148,16 @@ severed.  The saved contact position was `cut_pos_x: -5.30`, while the stock
 cut_pos_offset: 0.4
 ```
 
-The proposed hardware-validation path is to retain the calibrated contact
-position, increase `cut_pos_offset` in cautious 0.2 mm increments, and perform
-one watched cut/unload after each change.  This remains a proposal until the
-reference machine passes the test; do not copy an unvalidated offset.
+The reference machine was changed to:
+
+```ini
+cut_pos_offset: 0.6
+```
+
+`CALIBRATE_CUT_POS` then completed at contact X=-6.00 and saved the compensated
+`cut_pos_x: -5.40`. Compared with the previous saved -5.30 value, this produced
+0.10 mm more physical cutter travel. Do not increase the offset indefinitely;
+verify blade, plunger, pressure arm, and sensor-board mechanics first.
 
 The software-recovery gap is also now explicit.  The published macro requires
 all of these states before calling `BOX_QUIT_MATERIAL`:
@@ -156,17 +171,29 @@ still mechanically retained in the DXC2.  The second cleanup then performs
 only CFS bookkeeping.  In this captured failure, the filament switch was also
 left disabled after cancellation.
 
-The replacement recovery logic must therefore:
+The replacement recovery logic now:
 
-1. preserve whether the print began with a CFS tool rather than relying only
-   on the late toolhead-switch state;
-2. distinguish normal completion from a failed/incomplete retract;
-3. permit one controlled recovery cut/unload when the CFS still owns the
-   filament path;
-4. avoid an unlimited retry loop;
-5. restore the filament sensor on every exit path; and
-6. delay `BOX_END`/`BOX_END_PRINT` bookkeeping until the post-unload state has
-   been freshly evaluated.
+1. preserves CFS-path ownership rather than relying only on the late switch;
+2. distinguishes normal completion from a failed/incomplete retract;
+3. permits one controlled recovery after the first attempt;
+4. directly calls `BOX_MOVE_TO_CUT` because the vendor wrapper can skip the
+   cut when the toolhead switch is already clear;
+5. limits automatic attempts to two;
+6. restores the filament sensor on every terminal path; and
+7. delays `BOX_END`/`BOX_END_PRINT` until fresh post-unload evaluation.
+
+The watched forced-recovery test homed X/Y, heated to 250 C, completed the
+explicit cutter motion, retracted the CFS path, parked at X225/Y345, verified
+no resume/tangle fault, and restored the filament sensor. It produced no
+`RETRUDE_ERR6` or `key865`. Because filament was probably already absent after
+the earlier recovery attempt, this validates the forced-actuation, retraction,
+verification, and cleanup path; the first installed real-filament cancel/end
+cycle must still be watched to verify actual severance.
+
+Recovery homes only X and Y. If the toolhead has physically been moved outside
+normal travel, power down and place it inside the valid work area before
+homing. Do not spoof coordinates. On the reference machine, centering the head
+resolved the homing failure and the recovery test then completed normally.
 
 `Tn_retrude: -18` should not be changed on the evidence from this event alone.
 The cutter failure occurred first, so the repeated retracts were acting on

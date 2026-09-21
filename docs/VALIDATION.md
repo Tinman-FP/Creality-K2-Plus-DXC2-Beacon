@@ -81,6 +81,9 @@ With the nozzle at a material-appropriate temperature:
 3. confirm the cutter fully severs filament rather than performing a cold pull; and
 4. verify the measured contact falls inside the configured min/max window.
 
+On the reference machine, `cut_pos_offset: 0.6` produced contact X=-6.00 and
+saved `cut_pos_x: -5.40`. Your saved position may differ.
+
 ## 7. CFS load/unload
 
 Use one visible, straight filament path first.
@@ -115,6 +118,11 @@ At completion confirm:
 - filament leaves both DXC2 drive stages;
 - CFS retracts cleanly; and
 - Creality CFS bookkeeping completes afterward.
+
+Then perform one watched cancel test with filament genuinely engaged in both
+DXC2 drive stages. Confirm the bounded recovery does not exceed two attempts,
+does not produce `RETRUDE_ERR6`/`key865`, and reports `DXC2 cleanup: filament
+sensor restored`. Cutter-contact messages alone do not prove severance.
 
 ## 10. Acceptance criteria
 

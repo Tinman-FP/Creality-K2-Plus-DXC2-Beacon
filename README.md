@@ -113,6 +113,8 @@ Tn_retrude: -18
 buffer_empty_len: 25.5
 check_cut_pos_x_max: -5.0
 check_cut_pos_x_min: -9.5
+# motor_control.cfg
+cut_pos_offset: 0.6
 ```
 
 The official DXC2 instructions use `Tn_retrude: -20`. On the reference machine, `-18` produced a smoother load/unload transition. The final `buffer_empty_len: 25.5` was reached by tuning in halves after a large correction fed too far and triggered a tangle fault. See [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md) before changing either value.
@@ -127,23 +129,24 @@ START_PRINT EXTRUDER_TEMP=... BED_TEMP=...
 
 If object definitions are missing, the supplied KAMP macro falls back to the configured full mesh area.
 
-## Open validation item
+## Validated cancel/unload recovery
 
-A captured abort on 2026-09-20 exposed a cutter/recovery edge case that is
-still under controlled validation.  The K2 reported cutter contact and a
-successful return even though the filament was not severed.  Retraction then
-failed, and the later cancel cleanup skipped its recovery unload after the
-toolhead filament switch had cleared.  The failure also left that switch
-disabled.
+A captured abort on 2026-09-20 exposed a cutter/recovery edge case: the K2
+reported cutter contact and return even though the filament was not severed.
+Retraction failed, later cleanup trusted an already-clear toolhead switch, and
+the filament sensor remained disabled.
 
-Do not treat cutter-contact messages as proof of a completed cut.  Verify the
-blade physically severs filament, and confirm the filament sensor is enabled
-after any failed unload.  The currently published `DXC2_END_UNLOAD` remains
-the last successfully tested normal end-of-print path; its fault-recovery gate
-will be revised only after the replacement logic and cutter-depth compensation
-pass a watched hardware test.  See
-[`docs/DXC2-CFS.md`](docs/DXC2-CFS.md#captured-abort-and-cutter-failure) and the
-repository's open issues.
+The reference machine now uses `cut_pos_offset: 0.6` and a bounded recovery
+macro. The macro forces the physical cutter move when the CFS still owns the
+path but the toolhead switch has cleared, waits for that move before
+retraction, freshly verifies the result, delays CFS bookkeeping until success,
+and restores the filament sensor on every terminal path. The recovery sequence
+completed without `RETRUDE_ERR6`, `key865`, a tangle, or a pause fault.
+
+Cutter contact still proves actuator contact—not filament severance. Watch the
+first real-filament end/cancel cycle after installation and verify the blade
+physically cuts. See
+[`docs/DXC2-CFS.md`](docs/DXC2-CFS.md#captured-abort-and-cutter-failure).
 
 ## Support boundaries
 

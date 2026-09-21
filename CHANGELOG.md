@@ -2,17 +2,16 @@
 
 ## Unreleased
 
-- Documented a captured abort where cutter contact/return reported success but
-  the DXC2 did not sever the filament.
-- Recorded the resulting `RETRUDE_ERR6` / `key865` timeline and confirmed that
-  `Tn_retrude: -18` was not the initiating fault.
-- Identified a recovery-state gap: cleanup relied on the late toolhead filament
-  switch, skipped a second physical unload after it cleared, and left the
-  sensor disabled.
-- Added validation requirements for bounded recovery, fresh post-unload state
-  evaluation, delayed CFS bookkeeping, and unconditional sensor restoration.
-- Marked cutter-depth compensation changes as unvalidated pending a watched
-  hardware test.
+- Added a validated, bounded DXC2 cancel/end recovery path that forces cutter
+  motion when the CFS remains active after the toolhead switch clears.
+- Added fresh post-unload verification, delayed CFS bookkeeping, a two-attempt
+  limit, XY-only recovery homing, and unconditional filament-sensor cleanup.
+- Calibrated `cut_pos_offset: 0.6`; contact was X=-6.00 and the saved
+  compensated `cut_pos_x` was -5.40.
+- Verified the forced-actuation/retraction recovery path without
+  `RETRUDE_ERR6`, `key865`, tangle, pause, or sensor-cleanup faults.
+- Documented the captured failure timeline, safe homing recovery, and delayed
+  CFS aggregate connection behavior after service restart.
 
 ## 2026-09-20
 

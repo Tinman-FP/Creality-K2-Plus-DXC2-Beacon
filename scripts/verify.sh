@@ -54,8 +54,15 @@ done
 
 if grep -Eq '^[[:space:]]*Tn_retrude:[[:space:]]*-18([[:space:]]|$)' "$CONFIG_DIR/box.cfg" 2>/dev/null; then pass "DXC2 Tn_retrude -18"; else warn "Tn_retrude is not the tested -18"; fi
 if grep -Eq '^[[:space:]]*buffer_empty_len:[[:space:]]*25\.5([[:space:]]|$)' "$CONFIG_DIR/box.cfg" 2>/dev/null; then pass "CFS buffer_empty_len 25.5"; else warn "buffer_empty_len is not the tested 25.5"; fi
+if grep -Eq '^[[:space:]]*cut_pos_offset:[[:space:]]*0\.6([[:space:]]|$)' "$CONFIG_DIR/motor_control.cfg" 2>/dev/null; then pass "DXC2 cutter offset 0.6"; else warn "cut_pos_offset is not the tested 0.6"; fi
 if grep -q '^\[gcode_macro _CODEX_START_PRINT_AFTER_BOX\]' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null; then pass "staged start macro"; else warn "staged start macro not found"; fi
 if grep -q '^\[gcode_macro DXC2_END_UNLOAD\]' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null; then pass "DXC2 end unload macro"; else warn "DXC2 end unload macro not found"; fi
+if grep -q '^\[gcode_macro _DXC2_END_UNLOAD_VERIFY\]' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null && \
+   grep -q '^\[delayed_gcode DXC2_RESTORE_FILAMENT_SENSOR\]' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null; then
+    pass "DXC2 bounded recovery and sensor cleanup"
+else
+    warn "DXC2 bounded recovery or sensor cleanup not found"
+fi
 if grep -Eq '^[[:space:]]*G0[[:space:]]+E-40[[:space:]]+F360' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null; then pass "DXC2 40 mm unload retract"; else warn "DXC2 unload retract not found"; fi
 
 echo "Summary: $ERRORS failure(s), $WARNINGS warning(s)."

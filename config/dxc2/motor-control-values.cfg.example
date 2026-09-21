@@ -1,0 +1,8 @@
+# Merge this key into the EXISTING [motor_control] section in
+# motor_control.cfg. Do not include this file directly: a second section is
+# invalid.
+#
+# The reference DXC2 with the extended cutter actuator was calibrated after
+# this change. It contacted at X=-6.00 and saved cut_pos_x=-5.40. The prior
+# 0.4 value saved -5.30, so this produced 0.10 mm more physical cutter travel.
+cut_pos_offset: 0.6
