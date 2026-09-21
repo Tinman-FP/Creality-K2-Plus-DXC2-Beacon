@@ -81,8 +81,10 @@ With the nozzle at a material-appropriate temperature:
 3. confirm the cutter fully severs filament rather than performing a cold pull; and
 4. verify the measured contact falls inside the configured min/max window.
 
-On the reference machine, `cut_pos_offset: 0.6` produced contact X=-6.00 and
-saved `cut_pos_x: -5.40`. Your saved position may differ.
+The reference machine is being corrected to `cut_pos_offset: 0.2` after a
+watched unload revealed that `0.6` left a thin filament tail. Lower values
+command more cutter travel on this firmware. Your saved position will differ;
+do not reuse a saved `cut_pos_x` from another machine.
 
 ## 7. CFS load/unload
 

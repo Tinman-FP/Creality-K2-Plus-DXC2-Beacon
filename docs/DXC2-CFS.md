@@ -8,6 +8,7 @@ In the existing `QUIT_MATERIAL_RETRUDE_MATERIAL` macro:
 
 ```gcode
 G0 E-40 F360
+G4 P300
 ```
 
 In `box.cfg`:
@@ -31,12 +32,14 @@ check_cut_pos_x_min: -9.5
 
 `Tn_retrude: -18` is an important final correction made after the main test session. It loaded more smoothly than `-20` on this machine. Treat it as a tested result, not a universal requirement.
 
-With `cut_pos_offset: 0.6`, the extended actuator made repeatable calibration
-contact at X=-6.00 and saved `cut_pos_x: -5.40`. The earlier `0.4` offset had
-saved `cut_pos_x: -5.30`, so the final setting added 0.10 mm of physical cutter
-travel. The stock maximum of -5.5 rejected the earlier otherwise-repeatable
-result, so the maximum remains -5.0. Always watch cutter calibration and use
-the smallest window change that contains the repeatable physical trigger.
+The earlier `cut_pos_offset: 0.6` interpretation was wrong: on K2 firmware
+1.1.6.1, cutter calibration subtracts this compensation from the measured
+contact, so lowering the value commands more post-contact cutter travel. A
+real unload at `0.6` left a thin tail in the barrel and blocked the next feed.
+The reference machine was therefore changed to the commonly reported
+conservative starting value `0.2`. Always recalibrate after changing this
+value, watch the move, and reduce only in 0.1 mm steps if the filament is not
+fully severed. Never copy another machine's saved `cut_pos_x`.
 
 ## How CFS engagement fails with DXC2
 
@@ -148,16 +151,27 @@ severed.  The saved contact position was `cut_pos_x: -5.30`, while the stock
 cut_pos_offset: 0.4
 ```
 
-The reference machine was changed to:
+The reference machine was first changed to:
 
 ```ini
 cut_pos_offset: 0.6
 ```
 
-`CALIBRATE_CUT_POS` then completed at contact X=-6.00 and saved the compensated
-`cut_pos_x: -5.40`. Compared with the previous saved -5.30 value, this produced
-0.10 mm more physical cutter travel. Do not increase the offset indefinitely;
-verify blade, plunger, pressure arm, and sensor-board mechanics first.
+That was the wrong direction. A later watched cycle left a small tail in the
+barrel. The next feed passed the toolhead switch and initial extruder stage but
+stalled against that remnant; the CFS measuring wheel then stopped and the
+printer raised `cfs empty print` at 20:58:44. The live setting is now:
+
+```ini
+cut_pos_offset: 0.2
+```
+
+Reducing the offset increases cutter travel after contact calibration on this
+firmware. The unload macro also waits 300 ms after `G0 E-40 F360` before the CFS
+continues. Recalibrate after every offset or mechanical cutter change. Do not
+decrease indefinitely: too much travel can drive the cutter into the extruder
+body. Verify the blade, plunger, pressure arm, roll pin, sensor-board screws,
+cover clearance, and actuator geometry before going below `0.0`.
 
 The software-recovery gap is also now explicit.  The published macro requires
 all of these states before calling `BOX_QUIT_MATERIAL`:

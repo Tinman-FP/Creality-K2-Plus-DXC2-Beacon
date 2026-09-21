@@ -169,10 +169,12 @@ Why two start stages matter: Klipper renders a macro's Jinja state before queued
 
 Follow [`DXC2-CFS.md`](DXC2-CFS.md). Begin with the manufacturer changes, verify the mechanics, and only then approach the reference-machine tuning.
 
-Merge `cut_pos_offset: 0.6` from
+Merge the conservative DXC2 starting value `cut_pos_offset: 0.2` from
 [`config/dxc2/motor-control-values.cfg.example`](../config/dxc2/motor-control-values.cfg.example)
 into the existing `[motor_control]` section; do not include the example as a
-second section. Run `CALIBRATE_CUT_POS` afterward and watch the entire move.
+second section. Lower values command more post-contact travel on the tested
+firmware. Run `CALIBRATE_CUT_POS` afterward and watch the entire move; if the
+cut is still incomplete, reduce only in 0.1 mm steps.
 
 The unload reference file also requires small integration lines in the
 existing `START_PRINT`, `END_PRINT`, `CANCEL_PRINT`, and `MOTOR_CANCEL_PRINT`

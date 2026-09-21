@@ -9,9 +9,8 @@ Tn_retrude: -18
 # PTFE path.  On firmware 1.1.6.1, lowering this value feeds farther.
 buffer_empty_len: 25.5
 
-# Extended cutter actuator acceptance window.  The repeatable trigger point
-# on the reference machine was approximately X=-6.0 after setting
-# cut_pos_offset: 0.6; calibration saved the compensated cut_pos_x: -5.40.
+# Extended cutter actuator acceptance window. Calibrate the installed cutter;
+# do not copy the reference machine's saved cut_pos_x.
 check_cut_pos_x_min: -9.5
 check_cut_pos_x_max: -5.0
 

@@ -114,7 +114,7 @@ buffer_empty_len: 25.5
 check_cut_pos_x_max: -5.0
 check_cut_pos_x_min: -9.5
 # motor_control.cfg
-cut_pos_offset: 0.6
+cut_pos_offset: 0.2
 ```
 
 The official DXC2 instructions use `Tn_retrude: -20`. On the reference machine, `-18` produced a smoother load/unload transition. The final `buffer_empty_len: 25.5` was reached by tuning in halves after a large correction fed too far and triggered a tangle fault. See [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md) before changing either value.
@@ -136,15 +136,19 @@ reported cutter contact and return even though the filament was not severed.
 Retraction failed, later cleanup trusted an already-clear toolhead switch, and
 the filament sensor remained disabled.
 
-The reference machine now uses `cut_pos_offset: 0.6` and a bounded recovery
-macro. The macro forces the physical cutter move when the CFS still owns the
+The reference machine now uses `cut_pos_offset: 0.2`, adds a 300 ms settling
+pause after the local `E-40` retract, and retains the bounded recovery macro.
+On this firmware, reducing the offset commands more cutter travel after the
+contact calibration; the previous `0.6` experiment moved in the wrong
+direction. The macro forces the physical cutter move when the CFS still owns the
 path but the toolhead switch has cleared, waits for that move before
 retraction, freshly verifies the result, delays CFS bookkeeping until success,
 and restores the filament sensor on every terminal path. The recovery sequence
 completed without `RETRUDE_ERR6`, `key865`, a tangle, or a pause fault.
 
-Cutter contact still proves actuator contact—not filament severance. Watch the
-first real-filament end/cancel cycle after installation and verify the blade
+Cutter contact still proves actuator contact—not filament severance. The `0.2`
+setting requires cutter recalibration and a watched real-filament unload. Watch
+the first real-filament end/cancel cycle after installation and verify the blade
 physically cuts. See
 [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md#captured-abort-and-cutter-failure).
 
@@ -162,6 +166,9 @@ physically cuts. See
 - [Beacon Klipper module](https://github.com/beacon3d/beacon_klipper)
 - [Phaetus DXC2 models and adapters](https://github.com/Phaetus/DXC-2-Extruder)
 - [Creality CFS loading/unloading guide](https://wiki.creality.com/en/k2-flagship-series/k2-plus/cfs-filament)
+- [Creality Community: DXC2 setup values and `cut_pos_offset: 0.2`](https://forum.creality.com/t/please-help-with-the-dxc2/50837)
+- [Creality Community: incomplete-cut tail and cutter-rod spacer findings](https://forum.creality.com/t/k2-pro-dxc2-filament-sensor-issues/51178)
+- [Creality Community: stock cutter blade and DXC2 installation findings](https://forum.creality.com/t/how-to-install-the-dxc2-extruder-on-creality-k2-plus/49894?page=2)
 - [KAMP](https://github.com/kyleisah/Klipper-Adaptive-Meshing-Purging)
 
 ## License and attribution
