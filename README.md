@@ -127,6 +127,24 @@ START_PRINT EXTRUDER_TEMP=... BED_TEMP=...
 
 If object definitions are missing, the supplied KAMP macro falls back to the configured full mesh area.
 
+## Open validation item
+
+A captured abort on 2026-09-20 exposed a cutter/recovery edge case that is
+still under controlled validation.  The K2 reported cutter contact and a
+successful return even though the filament was not severed.  Retraction then
+failed, and the later cancel cleanup skipped its recovery unload after the
+toolhead filament switch had cleared.  The failure also left that switch
+disabled.
+
+Do not treat cutter-contact messages as proof of a completed cut.  Verify the
+blade physically severs filament, and confirm the filament sensor is enabled
+after any failed unload.  The currently published `DXC2_END_UNLOAD` remains
+the last successfully tested normal end-of-print path; its fault-recovery gate
+will be revised only after the replacement logic and cutter-depth compensation
+pass a watched hardware test.  See
+[`docs/DXC2-CFS.md`](docs/DXC2-CFS.md#captured-abort-and-cutter-failure) and the
+repository's open issues.
+
 ## Support boundaries
 
 - Only firmware `1.1.6.1` is represented by the supplied version-pinned runtime files.

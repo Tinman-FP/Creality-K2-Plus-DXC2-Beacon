@@ -110,6 +110,68 @@ The supplied `DXC2_END_UNLOAD` macro:
 
 See [`config/macros/dxc2_end_unload.cfg`](../config/macros/dxc2_end_unload.cfg).
 
+## Captured abort and cutter failure
+
+A later real-world abort exposed a second, distinct gap.  The reference K2 was
+printing without extrusion because of a mechanical fault.  After that fault
+was corrected, the print was aborted and the unload failed.  The operator
+observed that the filament was not cut.
+
+The Klipper/CFS log established this sequence (printer log clock):
+
+| Time | Event |
+|---|---|
+| 19:44:58 | `DXC2_END_UNLOAD` began the heat/cut/retract sequence |
+| 19:45:05 | K2 reported `[box] cut sensor detected` |
+| 19:45:08 | K2 reported `[box] cut to return OK` |
+| 19:45:14, 19:45:20, 19:45:27 | CFS repeatedly attempted the configured `-18 mm` retract |
+| 19:45:46 | CFS reported `RETRUDE_ERR6` |
+| 19:46:05 | Fault `key865`: `retrude error, failed to exit connections` |
+| 19:46:57 | Toolhead filament-switch state finally changed to false |
+| 19:47:12 | Cancel cleanup skipped the physical unload because the switch was already false |
+
+The cutter messages confirm X-axis contact with the cutter actuator and a
+successful return move.  They do **not** sense or prove that filament was
+severed.  The saved contact position was `cut_pos_x: -5.30`, while the stock
+`motor_control.cfg` cutter-depth compensation remained:
+
+```ini
+cut_pos_offset: 0.4
+```
+
+The proposed hardware-validation path is to retain the calibrated contact
+position, increase `cut_pos_offset` in cautious 0.2 mm increments, and perform
+one watched cut/unload after each change.  This remains a proposal until the
+reference machine passes the test; do not copy an unvalidated offset.
+
+The software-recovery gap is also now explicit.  The published macro requires
+all of these states before calling `BOX_QUIT_MATERIAL`:
+
+```text
+CFS enabled AND CFS filament state active AND toolhead filament switch true
+```
+
+After a failed retract, the toolhead switch can become false while filament is
+still mechanically retained in the DXC2.  The second cleanup then performs
+only CFS bookkeeping.  In this captured failure, the filament switch was also
+left disabled after cancellation.
+
+The replacement recovery logic must therefore:
+
+1. preserve whether the print began with a CFS tool rather than relying only
+   on the late toolhead-switch state;
+2. distinguish normal completion from a failed/incomplete retract;
+3. permit one controlled recovery cut/unload when the CFS still owns the
+   filament path;
+4. avoid an unlimited retry loop;
+5. restore the filament sensor on every exit path; and
+6. delay `BOX_END`/`BOX_END_PRINT` bookkeeping until the post-unload state has
+   been freshly evaluated.
+
+`Tn_retrude: -18` should not be changed on the evidence from this event alone.
+The cutter failure occurred first, so the repeated retracts were acting on
+continuous, uncut filament.
+
 ## Cutter calibration
 
 Before changing software, confirm:
@@ -122,3 +184,6 @@ Before changing software, confirm:
 - the pressure arm and PTFE inlet are aligned.
 
 The calibration can visibly actuate the cutter and still fail if the measured X contact falls just outside the configured acceptance window.
+
+The inverse is also true: a calibration or cut cycle can report successful
+contact and return without proving the blade actually severed the filament.

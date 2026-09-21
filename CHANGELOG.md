@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- Documented a captured abort where cutter contact/return reported success but
+  the DXC2 did not sever the filament.
+- Recorded the resulting `RETRUDE_ERR6` / `key865` timeline and confirmed that
+  `Tn_retrude: -18` was not the initiating fault.
+- Identified a recovery-state gap: cleanup relied on the late toolhead filament
+  switch, skipped a second physical unload after it cleared, and left the
+  sensor disabled.
+- Added validation requirements for bounded recovery, fresh post-unload state
+  evaluation, delayed CFS bookkeeping, and unconditional sensor restoration.
+- Marked cutter-depth compensation changes as unvalidated pending a watched
+  hardware test.
+
 ## 2026-09-20
 
 - Published the tested K2 Plus firmware 1.1.6.1 runtime and documentation.
