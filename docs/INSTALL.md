@@ -176,6 +176,12 @@ second section. Lower values command more post-contact travel on the tested
 firmware. Run `CALIBRATE_CUT_POS` afterward and watch the entire move; if the
 cut is still incomplete, reduce only in 0.1 mm steps.
 
+On the reference firmware, direct `BOX_LOAD_MATERIAL TNN=...` failed because
+the outer macro did not pass `TNN` to the nested feed/flush macros. If you
+need that direct command, merge the replacement section in
+[`config/dxc2/box-load-tnn-forward.cfg.example`](../config/dxc2/box-load-tnn-forward.cfg.example)
+into the existing `box.cfg` rather than including a duplicate section.
+
 The unload reference file also requires small integration lines in the
 existing `START_PRINT`, `END_PRINT`, `CANCEL_PRINT`, and `MOTOR_CANCEL_PRINT`
 macros. Follow the comments at the top of

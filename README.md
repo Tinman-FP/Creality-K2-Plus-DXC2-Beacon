@@ -105,7 +105,7 @@ Read the full installation guide before running anything.
 
 ## Tested DXC2 values
 
-These are the final values on the reference machine, not universal defaults:
+These are the current tested values on the reference machine, not universal defaults:
 
 ```ini
 # box.cfg
@@ -114,7 +114,7 @@ buffer_empty_len: 25.5
 check_cut_pos_x_max: -5.0
 check_cut_pos_x_min: -9.5
 # motor_control.cfg
-cut_pos_offset: 0.2
+cut_pos_offset: 0.1
 ```
 
 The official DXC2 instructions use `Tn_retrude: -20`. On the reference machine, `-18` produced a smoother load/unload transition. The final `buffer_empty_len: 25.5` was reached by tuning in halves after a large correction fed too far and triggered a tangle fault. See [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md) before changing either value.
@@ -136,7 +136,7 @@ reported cutter contact and return even though the filament was not severed.
 Retraction failed, later cleanup trusted an already-clear toolhead switch, and
 the filament sensor remained disabled.
 
-The reference machine now uses `cut_pos_offset: 0.2`, adds a 300 ms settling
+The reference machine adds a 300 ms settling
 pause after the local `E-40` retract, and retains the bounded recovery macro.
 On this firmware, reducing the offset commands more cutter travel after the
 contact calibration; the previous `0.6` experiment moved in the wrong
@@ -146,11 +146,19 @@ retraction, freshly verifies the result, delays CFS bookkeeping until success,
 and restores the filament sensor on every terminal path. The recovery sequence
 completed without `RETRUDE_ERR6`, `key865`, a tangle, or a pause fault.
 
-Cutter contact still proves actuator contact—not filament severance. The `0.2`
-setting requires cutter recalibration and a watched real-filament unload. Watch
-the first real-filament end/cancel cycle after installation and verify the blade
-physically cuts. See
+Cutter contact still proves actuator contact—not filament severance. On
+2026-09-22, an in-print PCTG change failed retraction after the `0.2` cutter
+stroke reported contact/return. The reference machine was recalibrated, then
+changed to `0.1` and recalibrated again. One watched CFS 1 slot B → A change
+then cut, retracted, loaded, and purged without a fault. This is one successful
+cycle, not proof that every future cut will succeed. See
 [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md#captured-abort-and-cutter-failure).
+
+The same session exposed a separate Creality macro bug: direct
+`BOX_LOAD_MATERIAL TNN=T1B` did not forward `TNN` into its nested feed/flush
+macros and shut Klipper down with `KeyError: None`. The reference machine now
+forwards the optional parameter; see
+[`config/dxc2/box-load-tnn-forward.cfg.example`](config/dxc2/box-load-tnn-forward.cfg.example).
 
 ## Support boundaries
 

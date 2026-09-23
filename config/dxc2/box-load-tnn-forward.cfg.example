@@ -1,0 +1,18 @@
+# Optional replacement for the EXISTING [gcode_macro BOX_LOAD_MATERIAL] in
+# box.cfg on tested K2 firmware 1.1.6.1. Do not include a duplicate section.
+# The stock outer macro drops TNN from direct BOX_LOAD_MATERIAL TNN=T1B calls,
+# making the nested BOX_EXTRUDE_MATERIAL receive no slot (KeyError: None).
+# Normal no-parameter calls retain their stock behavior.
+
+[gcode_macro BOX_LOAD_MATERIAL]
+gcode:
+  {% set get_tnn = "" %}
+  {% if 'TNN' in params|upper %}
+    {% set get_tnn = ('TNN=' + params.TNN) %}
+  {% endif %}
+  BOX_LOAD_MATERIAL_HEATING
+  BOX_LOAD_MATERIAL_CUT_MATERIAL
+  BOX_LOAD_MATERIAL_RETRUDE_MATERIAL
+  BOX_LOAD_MATERIAL_EXTRUDE_MATERIAL {get_tnn}
+  BOX_LOAD_MATERIAL_MATERIAL_FLUSH {get_tnn}
+  BOX_LOAD_MATERIAL_END

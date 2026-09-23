@@ -37,9 +37,10 @@ The earlier `cut_pos_offset: 0.6` interpretation was wrong: on K2 firmware
 contact, so lowering the value commands more post-contact cutter travel. A
 real unload at `0.6` left a thin tail in the barrel and blocked the next feed.
 The reference machine was therefore changed to the commonly reported
-conservative starting value `0.2`. Always recalibrate after changing this
-value, watch the move, and reduce only in 0.1 mm steps if the filament is not
-fully severed. Never copy another machine's saved `cut_pos_x`.
+conservative starting value `0.2`. A later watched in-print failure required
+`0.1` on this machine. Always recalibrate after changing this value, watch
+the move, and reduce only in 0.1 mm steps if the filament is not fully
+severed. Never copy another machine's saved `cut_pos_x`.
 
 ## How CFS engagement fails with DXC2
 
@@ -160,10 +161,33 @@ cut_pos_offset: 0.6
 That was the wrong direction. A later watched cycle left a small tail in the
 barrel. The next feed passed the toolhead switch and initial extruder stage but
 stalled against that remnant; the CFS measuring wheel then stopped and the
-printer raised `cfs empty print` at 20:58:44. The live setting is now:
+printer raised `cfs empty print` at 20:58:44. The setting at that point was:
 
 ```ini
 cut_pos_offset: 0.2
+```
+
+On 2026-09-22 a PCTG in-print T1B → T1A change again reported cutter contact
+and return, but the CFS retried retraction and raised `RETRUDE_ERR6` /
+`key865`. Cancel cleanup performed another cut and eventually cleared the
+filament switch. The measured cutter contact had shifted to X -5.8; calibration
+at offset `0.2` saved X -5.6. With the operator watching, the offset was
+reduced to `0.1`, Klipper restarted, and calibration saved X -5.7. A direct
+slot-B load and then a B → A change completed with no retraction fault; the
+operator confirmed normal purge from A. This is one successful real-filament
+change, not a guarantee that the cutter is reliable for every material.
+
+That direct slot-B load also exposed an unrelated stock macro bug:
+`BOX_LOAD_MATERIAL TNN=T1B` failed in the nested feed step with
+`KeyError: None`, shutting Klipper down. The outer macro was updated to
+forward its optional `TNN` to the feed and flush submacros, then Klipper was
+restarted. See
+[`box-load-tnn-forward.cfg.example`](../config/dxc2/box-load-tnn-forward.cfg.example).
+
+The reference machine currently uses:
+
+```ini
+cut_pos_offset: 0.1
 ```
 
 Reducing the offset increases cutter travel after contact calibration on this
