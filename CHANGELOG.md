@@ -2,13 +2,19 @@
 
 ## Unreleased
 
+- Captured a repeat in-print B → A retract failure: the slicer held the nozzle
+  at 240 C while the vendor `T1` cutter path raised its target to 250 C and
+  cut without waiting. Added an experimental pre-cut heat wait around the
+  original `T0`–`T3` commands; a watched loaded toolchange is still required.
+- Updated the recorded reference cutter offset to the calibrated `0.1` value
+  and refreshed repository checksums.
 - Added a validated, bounded DXC2 cancel/end recovery path that forces cutter
   motion when the CFS remains active after the toolhead switch clears.
 - Added fresh post-unload verification, delayed CFS bookkeeping, a two-attempt
   limit, XY-only recovery homing, and unconditional filament-sensor cleanup.
 - Corrected the cutter-depth direction after a real unload at `0.6` left a
-  thin tail in the barrel. The live conservative starting value is now
-  `cut_pos_offset: 0.2`, pending watched post-power-cycle calibration.
+  thin tail in the barrel. The conservative starting value is `0.2`; the
+  reference printer was later calibrated at `0.1` after a watched failure.
 - Added a 300 ms settling pause after the DXC2's 40 mm local unload retract.
 - Documented the `cfs empty print` tail-obstruction sequence and the separate
   closed-loop extruder-controller (`0x85`) startup-handshake fault.

@@ -160,6 +160,14 @@ macros and shut Klipper down with `KeyError: None`. The reference machine now
 forwards the optional parameter; see
 [`config/dxc2/box-load-tnn-forward.cfg.example`](config/dxc2/box-load-tnn-forward.cfg.example).
 
+The next in-print B → A change failed again while the slicer held the nozzle
+at 240 C and the vendor cutter path raised its target to 250 C without waiting.
+The reference machine now waits for the loaded material's target temperature
+before delegating to the original `T0`–`T3` command. This is an **unconfirmed
+process fix** until a watched loaded print-change succeeds; see
+[`config/dxc2/in-print-toolchange-preheat.cfg.example`](config/dxc2/in-print-toolchange-preheat.cfg.example)
+and the [captured log analysis](docs/DXC2-CFS.md#in-print-change-ordering-2026-09-23).
+
 ## Support boundaries
 
 - Only firmware `1.1.6.1` is represented by the supplied version-pinned runtime files.

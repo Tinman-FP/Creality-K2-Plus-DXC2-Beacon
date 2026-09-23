@@ -177,6 +177,32 @@ slot-B load and then a B → A change completed with no retraction fault; the
 operator confirmed normal purge from A. This is one successful real-filament
 change, not a guarantee that the cutter is reliable for every material.
 
+### In-print change ordering: 2026-09-23
+
+The next PCTG print failed on its first `T1` change from CFS bay B to A despite
+that successful manual change. The sliced file
+`Body1_PCTG_10h44m.gcode` sets `M104 S240`, retracts 2 mm, then calls `T1`.
+Klipper's log shows the vendor `T1` path raising the target to 250 C and
+reporting cutter contact at 01:08:51 while the measured nozzle was about
+240 C. The toolhead switch stayed true through repeated `RETRUDE_PROCESS`
+attempts at `Tn_retrude: -18`; the CFS reported `RETRUDE_ERR6`, then
+`RETRUDE_ERR2` / `key865` at 01:09:50. On cancellation, the separate
+`DXC2_END_UNLOAD` path first heated from 140 C toward 250 C, then cut and
+successfully retracted the same filament. Cutter-sensor contact alone does not
+prove that the filament was fully severed, but the different heat/cut order is
+an actionable process difference.
+
+The reference printer now wraps its vendor `T0`–`T3` commands to call
+`BOX_SET_TEMP` and explicitly wait until the nozzle is within 2 C of the
+selected target **before** the vendor cutter command runs. The original
+vendor `T` command still performs the actual cut, retraction, loading, and
+purge; cutter travel and `Tn_retrude` were not changed. The example is in
+[`in-print-toolchange-preheat.cfg.example`](../config/dxc2/in-print-toolchange-preheat.cfg.example).
+The wrapper is active and Klipper starts cleanly, but a watched, loaded
+in-print change is still required to establish whether it resolves the
+intermittent failure. Do not treat the timing correlation as proof that the
+temperature difference was the only cause.
+
 That direct slot-B load also exposed an unrelated stock macro bug:
 `BOX_LOAD_MATERIAL TNN=T1B` failed in the nested feed step with
 `KeyError: None`, shutting Klipper down. The outer macro was updated to
