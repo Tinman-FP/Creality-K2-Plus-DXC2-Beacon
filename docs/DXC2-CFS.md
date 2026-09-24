@@ -25,7 +25,7 @@ After repeated observed load/unload tests, the reference machine settled on:
 
 ```ini
 Tn_retrude: -18
-buffer_empty_len: 25.5
+buffer_empty_len: 23.25
 check_cut_pos_x_max: -5.0
 check_cut_pos_x_min: -9.5
 ```
@@ -51,7 +51,12 @@ On the reference machine:
 - `buffer_empty_len: 30` stopped too early for reliable second-stage engagement;
 - a large correction to `12` fed far enough but produced an overfeed/tangle condition;
 - half the correction returned to `21`;
-- half of the remaining correction returned to `25.5`, which became the stable value.
+- half of the remaining correction returned to `25.5`, which appeared stable
+  during the first round of tests;
+- a later direct 40 mm extrusion test showed that `25.5` could still leave the
+  filament short of reliable second-stage pickup; and
+- `23.25` produced visible extrusion, then passed ten alternating A/B changes
+  and the final unload without a retry or fault.
 
 This empirical result means decreasing `buffer_empty_len` made the CFS feed farther in this firmware. Change it in 1-2 mm steps once you are close. Do not jump straight to `12`.
 
@@ -194,14 +199,25 @@ an actionable process difference.
 
 The reference printer now wraps its vendor `T0`–`T3` commands to call
 `BOX_SET_TEMP` and explicitly wait until the nozzle is within 2 C of the
-selected target **before** the vendor cutter command runs. The original
-vendor `T` command still performs the actual cut, retraction, loading, and
-purge; cutter travel and `Tn_retrude` were not changed. The example is in
-[`in-print-toolchange-preheat.cfg.example`](../config/dxc2/in-print-toolchange-preheat.cfg.example).
-The wrapper is active and Klipper starts cleanly, but a watched, loaded
-in-print change is still required to establish whether it resolves the
-intermittent failure. Do not treat the timing correlation as proof that the
-temperature difference was the only cause.
+selected target **before** the cutter command runs. The deployed physical-slot
+wrapper then calls the vendor CFS heat, cut, retract, feed, flush, and finish
+stages explicitly. Its complete implementation is
+[`dxc2_cfs_tool_alias.cfg`](../config/macros/dxc2_cfs_tool_alias.cfg).
+It performs two cutter strokes separated by 50 mm of X
+clearance and waits 400 ms after the second stroke before retraction. A single
+bounded watchdog may invoke Creality's native recovery if a withdrawal pauses;
+it never loops indefinitely and was not needed during qualification.
+
+On 2026-09-24, after setting `buffer_empty_len: 23.25`, the operator visibly
+confirmed extrusion during a direct +40 mm engagement test. A five-layer chip
+then completed ten actual `T0`/`T1` changes. Logs recorded eleven temperature
+waits (one initial duplicate-tool request plus ten changes), eleven double-cut
+sequences (ten changes plus the final unload), ten CFS load transitions, zero
+watchdog retries, no pause, no `RETRUDE_ERR6`, and no `key865`. The end macro performed and verified
+the final unload; afterward the sensor was clear and both heater targets were
+zero. See the exact wrapper and test G-code in this repository. This establishes
+the combined process on the reference machine, not that the earlier 10 C
+temperature difference was the sole original cause.
 
 That direct slot-B load also exposed an unrelated stock macro bug:
 `BOX_LOAD_MATERIAL TNN=T1B` failed in the nested feed step with

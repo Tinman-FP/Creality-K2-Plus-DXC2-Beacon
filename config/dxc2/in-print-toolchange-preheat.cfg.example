@@ -1,47 +1,8 @@
-# Add these sections to an included config file on a K2 Plus with a DXC2 and
-# Creality CFS. Do not replace the printer's existing CFS tool commands.
-# This change is a process experiment pending a watched multi-change print.
-
-[gcode_macro _DXC2_PREPARE_TOOLCHANGE]
-description: Heat the loaded filament before a CFS toolchange cut.
-gcode:
-  {% if printer.box.enable|int == 1 and printer["filament_switch_sensor filament_sensor"].filament_detected %}
-    M400
-    BOX_SET_TEMP
-    _DXC2_WAIT_TOOLCHANGE_TEMP
-  {% endif %}
-
-[gcode_macro _DXC2_WAIT_TOOLCHANGE_TEMP]
-description: Wait for the temperature selected by BOX_SET_TEMP before cutting.
-gcode:
-  {% set target = printer.extruder.target|float %}
-  {% if target < 170 %}
-    {action_raise_error("DXC2 toolchange aborted: BOX_SET_TEMP did not select a safe nozzle target")}
-  {% endif %}
-  {action_respond_info("DXC2 toolchange: waiting for nozzle %.1f C before cutter stroke" % (target - 2.0))}
-  TEMPERATURE_WAIT SENSOR=extruder MINIMUM={target - 2.0}
-  M400
-
-[gcode_macro T0]
-rename_existing: T0.1
-gcode:
-  _DXC2_PREPARE_TOOLCHANGE
-  T0.1
-
-[gcode_macro T1]
-rename_existing: T1.1
-gcode:
-  _DXC2_PREPARE_TOOLCHANGE
-  T1.1
-
-[gcode_macro T2]
-rename_existing: T2.1
-gcode:
-  _DXC2_PREPARE_TOOLCHANGE
-  T2.1
-
-[gcode_macro T3]
-rename_existing: T3.1
-gcode:
-  _DXC2_PREPARE_TOOLCHANGE
-  T3.1
+# Superseded compatibility note
+#
+# The preheat-only experiment that used to live in this file has been replaced
+# by ../macros/dxc2_cfs_tool_alias.cfg. The validated wrapper contains the same
+# temperature wait plus physical CFS slot mapping, double cutting, a 400 ms
+# dwell, a post-load sensor gate, and one bounded retraction retry.
+#
+# Do not include this file. It intentionally defines no macros.

@@ -113,6 +113,20 @@ During startup confirm:
 - the guard arms only after mesh completion; and
 - the selected CFS tool loads only after the start sequence reaches its tool command.
 
+### DXC2 in-print change qualification
+
+After the basic load/unload tests pass, use the supplied
+[`DXC2_double_cut_ten_swap_test.gcode`](../tests/DXC2_double_cut_ten_swap_test.gcode)
+only with slots A and B loaded with compatible material. It was authored for a
+0.4 mm nozzle, 250 C nozzle, and 80 C bed. Review and edit those temperatures
+for your material before printing. Stay beside the printer for the entire run.
+
+Acceptance requires all ten changes to cut, retract, load, purge, and deposit
+material; no pause or CFS fault; a successful final unload; a clear toolhead
+sensor; and zero heater targets at completion. Inspect the chip and confirm
+both colors/materials are present. A `complete` state alone cannot prove that
+filament actually extruded.
+
 ## 9. End-sequence test
 
 At completion confirm:
@@ -137,4 +151,5 @@ Do not move to an unattended production print until all of the following pass:
 - three consecutive load/unload cycles on two different slots;
 - one complete small print with adaptive mesh;
 - one verified end-of-print unload; and
+- one watched ten-change A/B qualification with visible deposition from both slots;
 - one cold restart followed by successful Contact calibration.

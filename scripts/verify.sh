@@ -53,7 +53,7 @@ for include in beacon_user.cfg beacon_guard.cfg KAMP_Settings.cfg; do
 done
 
 if grep -Eq '^[[:space:]]*Tn_retrude:[[:space:]]*-18([[:space:]]|$)' "$CONFIG_DIR/box.cfg" 2>/dev/null; then pass "DXC2 Tn_retrude -18"; else warn "Tn_retrude is not the tested -18"; fi
-if grep -Eq '^[[:space:]]*buffer_empty_len:[[:space:]]*25\.5([[:space:]]|$)' "$CONFIG_DIR/box.cfg" 2>/dev/null; then pass "CFS buffer_empty_len 25.5"; else warn "buffer_empty_len is not the tested 25.5"; fi
+if grep -Eq '^[[:space:]]*buffer_empty_len:[[:space:]]*23\.25([[:space:]]|$)' "$CONFIG_DIR/box.cfg" 2>/dev/null; then pass "CFS buffer_empty_len 23.25"; else warn "buffer_empty_len is not the tested 23.25"; fi
 if grep -Eq '^[[:space:]]*cut_pos_offset:[[:space:]]*0\.(1|2)([[:space:]]|$)' "$CONFIG_DIR/motor_control.cfg" 2>/dev/null; then pass "DXC2 cutter offset is at a documented calibrated value"; else warn "cut_pos_offset is not the documented 0.2 starting or 0.1 watched-test value"; fi
 if grep -q '^\[gcode_macro _CODEX_START_PRINT_AFTER_BOX\]' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null; then pass "staged start macro"; else warn "staged start macro not found"; fi
 if grep -q '^\[gcode_macro DXC2_END_UNLOAD\]' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null; then pass "DXC2 end unload macro"; else warn "DXC2 end unload macro not found"; fi
@@ -66,10 +66,12 @@ fi
 if grep -Eq '^[[:space:]]*G0[[:space:]]+E-40[[:space:]]+F360' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null; then pass "DXC2 40 mm unload retract"; else warn "DXC2 unload retract not found"; fi
 if sed -n '/^\[gcode_macro QUIT_MATERIAL_RETRUDE_MATERIAL\]/,/^\[/p' "$CONFIG_DIR/gcode_macro.cfg" 2>/dev/null | grep -Eq '^[[:space:]]*G4[[:space:]]+P300([[:space:]]|$)'; then pass "DXC2 unload settling pause"; else warn "DXC2 G4 P300 settling pause not found"; fi
 if grep -q '^\[gcode_macro _DXC2_PREPARE_TOOLCHANGE\]' "$CONFIG_DIR/codex_cfs_tool_alias.cfg" 2>/dev/null && \
-   grep -q '^\[gcode_macro T1\]' "$CONFIG_DIR/codex_cfs_tool_alias.cfg" 2>/dev/null; then
-    pass "DXC2 in-print pre-cut heat wait installed (requires watched validation)"
+   grep -q '^\[gcode_macro _DXC2_DOUBLE_CUT\]' "$CONFIG_DIR/codex_cfs_tool_alias.cfg" 2>/dev/null && \
+   grep -q '^\[delayed_gcode DXC2_RETRUDE_RETRY_WATCHDOG\]' "$CONFIG_DIR/codex_cfs_tool_alias.cfg" 2>/dev/null && \
+   grep -Eq '^[[:space:]]*G4[[:space:]]+P400([[:space:]]|$)' "$CONFIG_DIR/codex_cfs_tool_alias.cfg" 2>/dev/null; then
+    pass "validated DXC2 preheat, double-cut, dwell, and bounded watchdog installed"
 else
-    warn "DXC2 in-print pre-cut heat wait not installed"
+    warn "validated DXC2 toolchange wrapper is missing or incomplete"
 fi
 
 echo "Summary: $ERRORS failure(s), $WARNINGS warning(s)."

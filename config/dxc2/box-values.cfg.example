@@ -7,7 +7,7 @@ Tn_retrude: -18
 
 # Reference-machine CFS handoff value.  Tune in 1-2 mm increments for your
 # PTFE path.  On firmware 1.1.6.1, lowering this value feeds farther.
-buffer_empty_len: 25.5
+buffer_empty_len: 23.25
 
 # Extended cutter actuator acceptance window. Calibrate the installed cutter;
 # do not copy the reference machine's saved cut_pos_x.

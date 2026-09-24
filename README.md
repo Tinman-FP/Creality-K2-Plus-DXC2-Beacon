@@ -56,13 +56,15 @@ Firmware updates can overwrite `/usr/share/klipper`, `/etc/init.d`, and printer 
 | Path | Purpose |
 |---|---|
 | [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md) | DXC2 installation deltas, CFS engagement tuning, cutter calibration, and PTFE findings |
+| [`docs/DXC2-LESSONS-LEARNED.md`](docs/DXC2-LESSONS-LEARNED.md) | Full failure chronology, rejected hypotheses, final fix, and proof test |
 | [`docs/BEACON.md`](docs/BEACON.md) | Beacon architecture, offsets, homing flow, mesh limits, and calibration |
 | [`docs/INSTALL.md`](docs/INSTALL.md) | Backup-first installation procedure |
 | [`docs/VALIDATION.md`](docs/VALIDATION.md) | Commissioning tests and expected results |
 | [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Symptoms, causes, and corrections found during testing |
 | [`docs/ROLLBACK.md`](docs/ROLLBACK.md) | Recovery and firmware-update checklist |
 | [`config/dxc2/`](config/dxc2/) | Small DXC2/CFS edits; these are intentionally not a full machine config |
-| [`config/macros/`](config/macros/) | Start, end, calibration, and guard macro references |
+| [`config/macros/`](config/macros/) | Start, end, calibration, guard, and validated DXC2 toolchange macros |
+| [`tests/DXC2_double_cut_ten_swap_test.gcode`](tests/DXC2_double_cut_ten_swap_test.gcode) | Watched A/B ten-change qualification chip used on the reference machine |
 | [`config/beacon_user.cfg.example`](config/beacon_user.cfg.example) | Tested Beacon configuration; offsets must match your mount |
 | [`runtime/firmware-1.1.6.1/`](runtime/firmware-1.1.6.1/) | Version-pinned Klipper runtime files used by the tested machine |
 | [`bin/armv7l/beacon_usb_bridge`](bin/armv7l/beacon_usb_bridge) | Tested ARMv7 USB-to-PTY bridge |
@@ -110,14 +112,14 @@ These are the current tested values on the reference machine, not universal defa
 ```ini
 # box.cfg
 Tn_retrude: -18
-buffer_empty_len: 25.5
+buffer_empty_len: 23.25
 check_cut_pos_x_max: -5.0
 check_cut_pos_x_min: -9.5
 # motor_control.cfg
 cut_pos_offset: 0.1
 ```
 
-The official DXC2 instructions use `Tn_retrude: -20`. On the reference machine, `-18` produced a smoother load/unload transition. The final `buffer_empty_len: 25.5` was reached by tuning in halves after a large correction fed too far and triggered a tangle fault. See [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md) before changing either value.
+The official DXC2 instructions use `Tn_retrude: -20`. On the reference machine, `-18` produced a smoother load/unload transition. An earlier `buffer_empty_len: 25.5` was close, but a direct extrusion test proved that it could leave filament only partly engaged in the second DXC2 drive stage. The final reference value is `23.25`; it passed a visible 40 mm purge and a ten-change A/B print. See [`docs/DXC2-CFS.md`](docs/DXC2-CFS.md) before changing either value.
 
 ## Critical slicer requirement
 
@@ -162,11 +164,16 @@ forwards the optional parameter; see
 
 The next in-print B → A change failed again while the slicer held the nozzle
 at 240 C and the vendor cutter path raised its target to 250 C without waiting.
-The reference machine now waits for the loaded material's target temperature
-before delegating to the original `T0`–`T3` command. This is an **unconfirmed
-process fix** until a watched loaded print-change succeeds; see
-[`config/dxc2/in-print-toolchange-preheat.cfg.example`](config/dxc2/in-print-toolchange-preheat.cfg.example)
-and the [captured log analysis](docs/DXC2-CFS.md#in-print-change-ordering-2026-09-23).
+The reference machine now waits for the loaded material's target temperature,
+performs two full cutter strokes separated by 50 mm of X clearance, waits
+400 ms after the second stroke, then delegates to the CFS retract/load path.
+The complete wrapper is
+[`config/macros/dxc2_cfs_tool_alias.cfg`](config/macros/dxc2_cfs_tool_alias.cfg).
+With `buffer_empty_len: 23.25`, this passed a visible direct 40 mm extrusion
+test and ten consecutive in-print A/B changes with no retry, pause, `key865`,
+or `RETRUDE_ERR6`. The final unload also verified cleanly. This validates the
+combined reference configuration; individual values still require cautious
+commissioning on another machine.
 
 ## Support boundaries
 

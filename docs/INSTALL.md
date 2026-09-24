@@ -72,6 +72,7 @@ cp config/beacon_guard.cfg /mnt/UDISK/printer_data/config/beacon_guard.cfg
 cp config/KAMP_Settings.cfg /mnt/UDISK/printer_data/config/KAMP_Settings.cfg
 mkdir -p /mnt/UDISK/printer_data/config/KAMP
 cp config/KAMP/Adaptive_Meshing.cfg /mnt/UDISK/printer_data/config/KAMP/Adaptive_Meshing.cfg
+cp config/macros/dxc2_cfs_tool_alias.cfg /mnt/UDISK/printer_data/config/codex_cfs_tool_alias.cfg
 ```
 
 Edit `beacon_user.cfg` before restarting Klipper:
@@ -100,6 +101,7 @@ Add the following includes above the `SAVE_CONFIG` block:
 [include beacon_user.cfg]
 [include beacon_guard.cfg]
 [include KAMP_Settings.cfg]
+[include codex_cfs_tool_alias.cfg]
 ```
 
 Replace the stock strain-gauge probe path:
@@ -159,9 +161,17 @@ Use the files in [`config/macros`](../config/macros):
 
 - `start_print.cfg`: disarms the guard, completes CFS preflight, then evaluates the current mesh in a second macro stage;
 - `dxc2_end_unload.cfg`: performs a physical CFS unload before Creality end bookkeeping;
+- `dxc2_cfs_tool_alias.cfg`: maps slicer tools to physical CFS bays, waits at
+  unload temperature, double-cuts with a 50 mm clearance move and 400 ms dwell,
+  verifies post-load filament, and provides one bounded retraction retry;
 - `beacon_calibration.cfg`: full-bed and maintenance calibration references.
 
 These sections replace existing macro sections with the same names. Klipper rejects duplicate macro names.
+
+Do not install the older
+`config/dxc2/in-print-toolchange-preheat.cfg.example` together with
+`dxc2_cfs_tool_alias.cfg`; the latter is the validated replacement and already
+contains the preheat logic.
 
 Why two start stages matter: Klipper renders a macro's Jinja state before queued commands execute. A single-stage macro can see an active mesh, queue `BOX_START_PRINT`, have that preflight clear the mesh, skip calibration, and then fail while arming the Beacon guard. Calling a second macro after `BOX_START_PRINT` forces a fresh state evaluation.
 

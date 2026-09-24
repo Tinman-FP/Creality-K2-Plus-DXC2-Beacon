@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Validated the complete DXC2 in-print toolchange path with a direct visible
+  40 mm extrusion test, ten consecutive A/B changes, and a verified final
+  unload. No watchdog retry, pause, `RETRUDE_ERR6`, or `key865` occurred.
+- Corrected the reference CFS handoff from `buffer_empty_len: 25.5` to the
+  empirically validated `23.25` value.
+- Added the deployed double-cut wrapper: two full strokes, 50 mm X clearance,
+  a 400 ms post-stroke dwell, pre-cut temperature wait, and one bounded native
+  recovery attempt.
+- Added the exact ten-change qualification G-code and a complete DXC2
+  lessons-learned guide.
 - Captured a repeat in-print B → A retract failure: the slicer held the nozzle
   at 240 C while the vendor `T1` cutter path raised its target to 250 C and
   cut without waiting. Added an experimental pre-cut heat wait around the
@@ -36,5 +46,5 @@
 - Added guarded post-mesh Beacon dropout handling.
 - Added staged `START_PRINT` mesh-state fix after CFS preflight.
 - Added DXC2 physical end-of-print unload.
-- Recorded final `Tn_retrude: -18`, `buffer_empty_len: 25.5`, and extended-cutter calibration window.
+- Recorded the then-current `Tn_retrude: -18`, `buffer_empty_len: 25.5`, and extended-cutter calibration window. The handoff value was later refined to `23.25`.
 - Documented PTFE routing, CFS engagement, cutter, and repeated-load findings.
