@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Published a sanitized live reference snapshot of all ten configuration files
+  changed during the DXC2/CFS/Beacon integration. The generated `SAVE_CONFIG`
+  block is excluded to prevent copying machine identity and calibration data.
 - Validated the complete DXC2 in-print toolchange path with a direct visible
   40 mm extrusion test, ten consecutive A/B changes, and a verified final
   unload. No watchdog retry, pause, `RETRUDE_ERR6`, or `key865` occurred.

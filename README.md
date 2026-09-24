@@ -69,6 +69,7 @@ Firmware updates can overwrite `/usr/share/klipper`, `/etc/init.d`, and printer 
 | [`runtime/firmware-1.1.6.1/`](runtime/firmware-1.1.6.1/) | Version-pinned Klipper runtime files used by the tested machine |
 | [`bin/armv7l/beacon_usb_bridge`](bin/armv7l/beacon_usb_bridge) | Tested ARMv7 USB-to-PTY bridge |
 | [`scripts/`](scripts/) | Runtime installer, verifier, checksum generator, and rollback helper |
+| [`reference/live-config/`](reference/live-config/) | Sanitized snapshot of every active configuration file changed on the reference K2 |
 
 ## Fast path
 
